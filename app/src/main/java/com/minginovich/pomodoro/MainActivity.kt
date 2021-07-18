@@ -13,6 +13,7 @@ class MainActivity : AppCompatActivity(), StopwatchListener, TimePickerFragment.
 
     private val stopwatchAdapter = StopwatchAdapter(this)
     private val stopwatches = mutableListOf<Stopwatch>()
+    private var startedStopwatch: Int = -1
     private var nextId = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,6 +46,16 @@ class MainActivity : AppCompatActivity(), StopwatchListener, TimePickerFragment.
     override fun delete(id: Int) {
         stopwatches.remove(stopwatches.find { it.id == id })
         stopwatchAdapter.submitList(stopwatches.toList())
+    }
+
+    //StopwatchListener
+    override fun getStartedStopwatch(): Int {
+        return startedStopwatch
+    }
+
+    //StopwatchListener
+    override fun setStartedStopwatch(stopwatchId: Int) {
+        startedStopwatch = stopwatchId
     }
 
     private fun changeStopwatch(id: Int, startMs: Long, balanceMs: Long, isStarted: Boolean) {

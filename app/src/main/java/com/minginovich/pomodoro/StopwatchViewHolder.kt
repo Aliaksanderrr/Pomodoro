@@ -16,7 +16,6 @@ class StopwatchViewHolder(
 ) : RecyclerView.ViewHolder(binding.root) {
 
     private var timer: CountDownTimer? = null
-    private var started: Stopwatch? = null
 
     fun bind(stopwatch: Stopwatch) {
         binding.stopwatchTimer.text = stopwatch.balanceMs.displayTime()
@@ -24,7 +23,7 @@ class StopwatchViewHolder(
         binding.customViewProgress.setPeriod(stopwatch.startMs)
         binding.customViewProgress.setCurrent(stopwatch.startMs - stopwatch.balanceMs)
 
-        if (stopwatch.isStarted) {
+        if (listener.getStartedStopwatch() == stopwatch.id){
             startTimer(stopwatch)
         } else {
             stopTimer(stopwatch)
@@ -35,14 +34,21 @@ class StopwatchViewHolder(
 
     private fun initButtonsListeners(stopwatch: Stopwatch) {
         binding.startPauseButton.setOnClickListener {
-            if (stopwatch.isStarted) {
+            if (listener.getStartedStopwatch() == stopwatch.id) {
                 listener.stop(stopwatch.id,stopwatch.startMs, stopwatch.balanceMs)
+                listener.setStartedStopwatch(-1)
             } else {
+                listener.setStartedStopwatch(stopwatch.id)
                 listener.start(stopwatch.id,stopwatch.startMs, stopwatch.balanceMs)
             }
         }
 
-        binding.deleteButton.setOnClickListener { listener.delete(stopwatch.id) }
+        binding.deleteButton.setOnClickListener {
+            if (listener.getStartedStopwatch() == stopwatch.id){
+                listener.setStartedStopwatch(-1)
+            }
+            listener.delete(stopwatch.id)
+        }
     }
 
     private fun startTimer(stopwatch: Stopwatch) {
@@ -78,6 +84,9 @@ class StopwatchViewHolder(
                 binding.stopwatchTimer.text = stopwatch.balanceMs.displayTime()
                 //////////////////////////////////////////
                 binding.customViewProgress.setCurrent(stopwatch.startMs - stopwatch.balanceMs)
+                if (listener.getStartedStopwatch() != stopwatch.id){
+                    listener.stop(stopwatch.id, stopwatch.startMs, stopwatch.balanceMs)
+                }
             }
 
             override fun onFinish() {
