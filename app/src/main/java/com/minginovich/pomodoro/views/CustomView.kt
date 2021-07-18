@@ -7,6 +7,7 @@ import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
 import androidx.annotation.AttrRes
+import com.minginovich.pomodoro.R
 
 class CustomView @JvmOverloads constructor(
     context: Context,
