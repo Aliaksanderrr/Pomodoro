@@ -6,6 +6,7 @@ import android.graphics.drawable.AnimationDrawable
 import android.os.CountDownTimer
 import androidx.core.view.isInvisible
 import androidx.recyclerview.widget.RecyclerView
+import com.minginovich.pomodoro.views.FakeActivity
 
 
 class StopwatchViewHolder(
@@ -15,9 +16,13 @@ class StopwatchViewHolder(
 ) : RecyclerView.ViewHolder(binding.root) {
 
     private var timer: CountDownTimer? = null
+    private var started: Stopwatch? = null
 
     fun bind(stopwatch: Stopwatch) {
-        binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
+        binding.stopwatchTimer.text = stopwatch.balanceMs.displayTime()
+        //////////////////////////////////////////
+        binding.customViewProgress.setPeriod(stopwatch.startMs)
+        binding.customViewProgress.setCurrent(stopwatch.startMs - stopwatch.balanceMs)
 
         if (stopwatch.isStarted) {
             startTimer(stopwatch)
@@ -31,20 +36,19 @@ class StopwatchViewHolder(
     private fun initButtonsListeners(stopwatch: Stopwatch) {
         binding.startPauseButton.setOnClickListener {
             if (stopwatch.isStarted) {
-                listener.stop(stopwatch.id, stopwatch.currentMs)
+                listener.stop(stopwatch.id,stopwatch.startMs, stopwatch.balanceMs)
             } else {
-                listener.start(stopwatch.id)
+                listener.start(stopwatch.id,stopwatch.startMs, stopwatch.balanceMs)
             }
         }
-
-        binding.restartButton.setOnClickListener { listener.reset(stopwatch.id) }
 
         binding.deleteButton.setOnClickListener { listener.delete(stopwatch.id) }
     }
 
     private fun startTimer(stopwatch: Stopwatch) {
         val drawable = resources.getDrawable(R.drawable.ic_baseline_pause_24)
-        binding.startPauseButton.setImageDrawable(drawable)
+        binding.startPauseButton.text = "Pause"
+        binding.startPauseButton.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
 
         timer?.cancel()
         timer = getCountDownTimer(stopwatch)
@@ -56,7 +60,8 @@ class StopwatchViewHolder(
 
     private fun stopTimer(stopwatch: Stopwatch) {
         val drawable = resources.getDrawable(R.drawable.ic_baseline_play_arrow_24)
-        binding.startPauseButton.setImageDrawable(drawable)
+        binding.startPauseButton.text = "Start"
+        binding.startPauseButton.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
 
         timer?.cancel()
 
@@ -69,12 +74,14 @@ class StopwatchViewHolder(
             val interval = UNIT_TEN_MS
 
             override fun onTick(millisUntilFinished: Long) {
-                stopwatch.currentMs += interval
-                binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
+                stopwatch.balanceMs -= interval
+                binding.stopwatchTimer.text = stopwatch.balanceMs.displayTime()
+                //////////////////////////////////////////
+                binding.customViewProgress.setCurrent(stopwatch.startMs - stopwatch.balanceMs)
             }
 
             override fun onFinish() {
-                binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
+                binding.stopwatchTimer.text = stopwatch.balanceMs.displayTime()
             }
         }
     }

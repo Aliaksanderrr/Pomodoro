@@ -1,8 +1,7 @@
 package com.minginovich.pomodoro
 
 interface StopwatchListener {
-    fun start(id: Int)
-    fun stop(id: Int, currentMs: Long)
-    fun reset(id: Int)
+    fun start(id: Int, startMs: Long, balanceMs: Long)
+    fun stop(id: Int, startMs: Long, balanceMs: Long)
     fun delete(id: Int)
 }

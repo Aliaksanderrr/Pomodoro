@@ -2,6 +2,7 @@ package com.minginovich.pomodoro
 
 data class Stopwatch(
     val id: Int,
-    var currentMs: Long,
+    val startMs: Long,
+    var balanceMs: Long,
     val isStarted: Boolean
 )

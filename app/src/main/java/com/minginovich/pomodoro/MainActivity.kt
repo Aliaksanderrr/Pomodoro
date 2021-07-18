@@ -1,12 +1,13 @@
 package com.minginovich.pomodoro
 
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.minginovich.pomodoro.databinding.ActivityMainBinding
 
 
-class MainActivity : AppCompatActivity(), StopwatchListener {
+class MainActivity : AppCompatActivity(), StopwatchListener, TimePickerFragment.TimePickerCallback {
 
     private lateinit var binding: ActivityMainBinding
 
@@ -26,33 +27,31 @@ class MainActivity : AppCompatActivity(), StopwatchListener {
         }
 
         binding.addNewStopwatchButton.setOnClickListener {
-            stopwatches.add(Stopwatch(nextId++, 0, false))
-            stopwatchAdapter.submitList(stopwatches.toList())
+            TimePickerFragment().show(supportFragmentManager, "timePicker")
         }
     }
 
-    override fun start(id: Int) {
-        changeStopwatch(id, null, true)
+    //StopwatchListener
+    override fun start(id: Int, startMs: Long, balanceMs: Long) {
+        changeStopwatch(id, startMs , balanceMs, true)
     }
 
-    override fun stop(id: Int, currentMs: Long) {
-        changeStopwatch(id, currentMs, false)
+    //StopwatchListener
+    override fun stop(id: Int, startMs: Long, balanceMs: Long) {
+        changeStopwatch(id, startMs , balanceMs, false)
     }
 
-    override fun reset(id: Int) {
-        changeStopwatch(id, 0L, false)
-    }
-
+    //StopwatchListener
     override fun delete(id: Int) {
         stopwatches.remove(stopwatches.find { it.id == id })
         stopwatchAdapter.submitList(stopwatches.toList())
     }
 
-    private fun changeStopwatch(id: Int, currentMs: Long?, isStarted: Boolean) {
+    private fun changeStopwatch(id: Int, startMs: Long, balanceMs: Long, isStarted: Boolean) {
         val newTimers = mutableListOf<Stopwatch>()
         stopwatches.forEach {
             if (it.id == id) {
-                newTimers.add(Stopwatch(it.id, currentMs ?: it.currentMs, isStarted))
+                newTimers.add(Stopwatch(it.id, startMs, balanceMs, isStarted))
             } else {
                 newTimers.add(it)
             }
@@ -61,4 +60,16 @@ class MainActivity : AppCompatActivity(), StopwatchListener {
         stopwatches.clear()
         stopwatches.addAll(newTimers)
     }
+
+
+    /////TimePickerFragment.TimePickerCallback
+    override fun userChoice(timeMs: Long) {
+        Log.d("classTimePickerFragment", "userChoice: time=$timeMs")
+        if (timeMs > 0) {
+            Log.d("classTimePickerFragment", "user: time=$timeMs")
+            stopwatches.add(Stopwatch(nextId++, timeMs, timeMs, false))
+            stopwatchAdapter.submitList(stopwatches.toList())
+        }
+    }
+
 }
