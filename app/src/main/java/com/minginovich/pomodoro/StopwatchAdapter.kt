@@ -21,6 +21,7 @@ class StopwatchAdapter(
         holder.bind(getItem(position))
     }
 
+
     private companion object {
 
         private val itemComparator = object : DiffUtil.ItemCallback<Stopwatch>() {

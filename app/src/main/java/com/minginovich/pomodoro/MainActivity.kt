@@ -1,13 +1,17 @@
 package com.minginovich.pomodoro
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.*
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.minginovich.pomodoro.databinding.ActivityMainBinding
+import kotlinx.coroutines.*
 
 
-class MainActivity : AppCompatActivity(), StopwatchListener, TimePickerFragment.TimePickerCallback {
+class MainActivity : AppCompatActivity(), StopwatchListener, TimePickerFragment.TimePickerCallback, LifecycleObserver {
 
     private lateinit var binding: ActivityMainBinding
 
@@ -15,6 +19,7 @@ class MainActivity : AppCompatActivity(), StopwatchListener, TimePickerFragment.
     private val stopwatches = mutableListOf<Stopwatch>()
     private var startedStopwatch: Int = -1
     private var nextId = 0
+    private var startTime = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,6 +34,18 @@ class MainActivity : AppCompatActivity(), StopwatchListener, TimePickerFragment.
 
         binding.addNewStopwatchButton.setOnClickListener {
             TimePickerFragment().show(supportFragmentManager, "timePicker")
+        }
+
+
+        ProcessLifecycleOwner.get().lifecycle.addObserver(this)
+
+        startTime = System.currentTimeMillis()
+
+        lifecycleScope.launch(Dispatchers.Main) {
+            while (true) {
+                binding.timerView.text = (System.currentTimeMillis() - startTime).displayTime()
+                delay(INTERVAL)
+            }
         }
     }
 
@@ -72,6 +89,21 @@ class MainActivity : AppCompatActivity(), StopwatchListener, TimePickerFragment.
         stopwatches.addAll(newTimers)
     }
 
+    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+    fun onAppBackgrounded() {
+        val startIntent = Intent(this, ForegroundService::class.java)
+        startIntent.putExtra(COMMAND_ID, COMMAND_START)
+        startIntent.putExtra(STARTED_TIMER_TIME_MS, startTime)
+        startService(startIntent)
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_START)
+    fun onAppForegrounded() {
+        val stopIntent = Intent(this, ForegroundService::class.java)
+        stopIntent.putExtra(COMMAND_ID, COMMAND_STOP)
+        startService(stopIntent)
+    }
+
 
     /////TimePickerFragment.TimePickerCallback
     override fun userChoice(timeMs: Long) {
@@ -81,6 +113,10 @@ class MainActivity : AppCompatActivity(), StopwatchListener, TimePickerFragment.
             stopwatches.add(Stopwatch(nextId++, timeMs, timeMs, false))
             stopwatchAdapter.submitList(stopwatches.toList())
         }
+    }
+
+    private companion object {
+        private const val INTERVAL = 10L
     }
 
 }
