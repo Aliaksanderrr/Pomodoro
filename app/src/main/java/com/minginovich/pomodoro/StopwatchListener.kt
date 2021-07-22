@@ -5,5 +5,5 @@ interface StopwatchListener {
     fun stop(id: Int, startMs: Long, balanceMs: Long)
     fun delete(id: Int)
     fun getStartedStopwatch(): Int
-    fun setStartedStopwatch(stopwatchId: Int)
+    fun setStartedStopwatch(id: Int)
 }

@@ -2,6 +2,8 @@ package com.minginovich.pomodoro
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.*
@@ -15,11 +17,16 @@ class MainActivity : AppCompatActivity(), StopwatchListener, TimePickerFragment.
 
     private lateinit var binding: ActivityMainBinding
 
+//    private val stopwatches = mutableListOf<Stopwatch>()
+//    private var startedStopwatch: Stopwatch? = null
+//
+//    private var nextId = 0
+//    private var startTime = 0L
+
+    private val pomodoroViewModel: PomodoroViewModel by lazy {
+        ViewModelProvider(this).get(PomodoroViewModel::class.java)
+    }
     private val stopwatchAdapter = StopwatchAdapter(this)
-    private val stopwatches = mutableListOf<Stopwatch>()
-    private var startedStopwatch: Int = -1
-    private var nextId = 0
-    private var startTime = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,17 +43,35 @@ class MainActivity : AppCompatActivity(), StopwatchListener, TimePickerFragment.
             TimePickerFragment().show(supportFragmentManager, "timePicker")
         }
 
-
+//        val handler = Handler(Looper.myLooper()!!)
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
 
-        startTime = System.currentTimeMillis()
+        pomodoroViewModel.startTime = System.currentTimeMillis()
 
         lifecycleScope.launch(Dispatchers.Main) {
             while (true) {
-                binding.timerView.text = (System.currentTimeMillis() - startTime).displayTime()
+                val time = System.currentTimeMillis()
+                if (pomodoroViewModel.startedStopwatch != null && pomodoroViewModel.startedStopwatch!!.balanceMs > 1) {
+                    pomodoroViewModel.startedStopwatch!!.balanceMs -= time - pomodoroViewModel.startTime
+                        if (pomodoroViewModel.startedStopwatch!!.balanceMs < 1){
+                            pomodoroViewModel.startedStopwatch!!.balanceMs = 1
+                        }
+//                        if (startedStopwatch!!.balanceMs <= 0 ) {startedStopwatch!!.isStarted = false}
+//                        if (startedStopwatch!!.balanceMs <= 0 ) {handler.postAtFrontOfQueue {
+//                            startedStopwatch!!.balanceMs = 0
+////                            stop(startedStopwatch!!.id, startedStopwatch!!.startMs, startedStopwatch!!.balanceMs)
+//                            stopwatchAdapter.submitList(stopwatches)
+//                        }}
+                    }
+                pomodoroViewModel.startTime = time
                 delay(INTERVAL)
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        stopwatchAdapter.submitList(pomodoroViewModel.stopwatches.toList())
     }
 
     //StopwatchListener
@@ -61,23 +86,23 @@ class MainActivity : AppCompatActivity(), StopwatchListener, TimePickerFragment.
 
     //StopwatchListener
     override fun delete(id: Int) {
-        stopwatches.remove(stopwatches.find { it.id == id })
-        stopwatchAdapter.submitList(stopwatches.toList())
+        pomodoroViewModel.stopwatches.remove(pomodoroViewModel.stopwatches.find { it.id == id })
+        stopwatchAdapter.submitList(pomodoroViewModel.stopwatches.toList())
     }
 
     //StopwatchListener
     override fun getStartedStopwatch(): Int {
-        return startedStopwatch
+        return pomodoroViewModel.startedStopwatch?.id ?: -1
     }
 
     //StopwatchListener
-    override fun setStartedStopwatch(stopwatchId: Int) {
-        startedStopwatch = stopwatchId
+    override fun setStartedStopwatch(id: Int) {
+        pomodoroViewModel.startedStopwatch = pomodoroViewModel.stopwatches.find { it.id == id }
     }
 
     private fun changeStopwatch(id: Int, startMs: Long, balanceMs: Long, isStarted: Boolean) {
         val newTimers = mutableListOf<Stopwatch>()
-        stopwatches.forEach {
+        pomodoroViewModel.stopwatches.forEach {
             if (it.id == id) {
                 newTimers.add(Stopwatch(it.id, startMs, balanceMs, isStarted))
             } else {
@@ -85,20 +110,23 @@ class MainActivity : AppCompatActivity(), StopwatchListener, TimePickerFragment.
             }
         }
         stopwatchAdapter.submitList(newTimers)
-        stopwatches.clear()
-        stopwatches.addAll(newTimers)
+        pomodoroViewModel.stopwatches.clear()
+        pomodoroViewModel.stopwatches.addAll(newTimers)
+
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     fun onAppBackgrounded() {
+        Log.d("TAG", "onAppBackgrounded(): notification was running")
         val startIntent = Intent(this, ForegroundService::class.java)
         startIntent.putExtra(COMMAND_ID, COMMAND_START)
-        startIntent.putExtra(STARTED_TIMER_TIME_MS, startTime)
+        startIntent.putExtra(STARTED_TIMER_TIME_MS, pomodoroViewModel.startTime)
         startService(startIntent)
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun onAppForegrounded() {
+        Log.d("TAG", "onAppForegrounded(): activity was running")
         val stopIntent = Intent(this, ForegroundService::class.java)
         stopIntent.putExtra(COMMAND_ID, COMMAND_STOP)
         startService(stopIntent)
@@ -110,13 +138,10 @@ class MainActivity : AppCompatActivity(), StopwatchListener, TimePickerFragment.
         Log.d("classTimePickerFragment", "userChoice: time=$timeMs")
         if (timeMs > 0) {
             Log.d("classTimePickerFragment", "user: time=$timeMs")
-            stopwatches.add(Stopwatch(nextId++, timeMs, timeMs, false))
-            stopwatchAdapter.submitList(stopwatches.toList())
+            pomodoroViewModel.stopwatches.add(Stopwatch(pomodoroViewModel.nextId++, timeMs, timeMs, false))
+            stopwatchAdapter.submitList(pomodoroViewModel.stopwatches.toList())
         }
     }
 
-    private companion object {
-        private const val INTERVAL = 10L
-    }
 
 }

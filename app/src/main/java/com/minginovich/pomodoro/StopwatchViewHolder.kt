@@ -24,7 +24,12 @@ class StopwatchViewHolder(
         binding.customViewProgress.setCurrent(stopwatch.startMs - stopwatch.balanceMs)
 
         if (listener.getStartedStopwatch() == stopwatch.id){
-            startTimer(stopwatch)
+            if (stopwatch.balanceMs > 1) {
+                startTimer(stopwatch)
+            } else{
+                stopTimer(stopwatch)
+                listener.setStartedStopwatch(-1)
+            }
         } else {
             stopTimer(stopwatch)
         }
@@ -38,8 +43,8 @@ class StopwatchViewHolder(
                 listener.stop(stopwatch.id,stopwatch.startMs, stopwatch.balanceMs)
                 listener.setStartedStopwatch(-1)
             } else {
-                listener.setStartedStopwatch(stopwatch.id)
                 listener.start(stopwatch.id,stopwatch.startMs, stopwatch.balanceMs)
+                listener.setStartedStopwatch(stopwatch.id)
             }
         }
 
@@ -76,14 +81,16 @@ class StopwatchViewHolder(
     }
 
     private fun getCountDownTimer(stopwatch: Stopwatch): CountDownTimer {
-        return object : CountDownTimer(PERIOD, UNIT_TEN_MS) {
-            val interval = UNIT_TEN_MS
+        return object : CountDownTimer(PERIOD, INTERVAL) {
 
             override fun onTick(millisUntilFinished: Long) {
-                stopwatch.balanceMs -= interval
+//                stopwatch.balanceMs -= interval
                 binding.stopwatchTimer.text = stopwatch.balanceMs.displayTime()
-                //////////////////////////////////////////
+                ////////////////////////////////////////
                 binding.customViewProgress.setCurrent(stopwatch.startMs - stopwatch.balanceMs)
+                if (listener.getStartedStopwatch() == stopwatch.id && stopwatch.balanceMs  <= 1){
+                    listener.stop(stopwatch.id, stopwatch.startMs, stopwatch.balanceMs)
+                }
                 if (listener.getStartedStopwatch() != stopwatch.id){
                     listener.stop(stopwatch.id, stopwatch.startMs, stopwatch.balanceMs)
                 }
@@ -95,30 +102,4 @@ class StopwatchViewHolder(
         }
     }
 
-    private fun Long.displayTime(): String {
-        if (this <= 0L) {
-            return START_TIME
-        }
-        val h = this / 1000 / 3600
-        val m = this / 1000 % 3600 / 60
-        val s = this / 1000 % 60
-        val ms = this % 1000 / 10
-
-        return "${displaySlot(h)}:${displaySlot(m)}:${displaySlot(s)}:${displaySlot(ms)}"
-    }
-
-    private fun displaySlot(count: Long): String {
-        return if (count / 10L > 0) {
-            "$count"
-        } else {
-            "0$count"
-        }
-    }
-
-    private companion object {
-
-        private const val START_TIME = "00:00:00:00"
-        private const val UNIT_TEN_MS = 10L
-        private const val PERIOD = 1000L * 60L * 60L * 24L // Day
-    }
 }
