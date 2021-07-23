@@ -1,7 +1,7 @@
 package com.minginovich.pomodoro
 
-const val INTERVAL = 10L
-const val START_TIME = "00:00:00:00"
+const val INTERVAL = 50L
+const val START_TIME = "00:00:00"
 const val INVALID = "INVALID"
 const val COMMAND_START = "COMMAND_START"
 const val COMMAND_STOP = "COMMAND_STOP"
@@ -18,7 +18,7 @@ fun Long.displayTime(): String {
     val s = this / 1000 % 60
     val ms = this % 1000 / 10
 
-    return "${displaySlot(h)}:${displaySlot(m)}:${displaySlot(s)}:${displaySlot(ms)}"
+    return "${displaySlot(h)}:${displaySlot(m)}:${displaySlot(s)}"
 }
 
 private fun displaySlot(count: Long): String {

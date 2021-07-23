@@ -117,11 +117,13 @@ class MainActivity : AppCompatActivity(), StopwatchListener, TimePickerFragment.
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     fun onAppBackgrounded() {
-        Log.d("TAG", "onAppBackgrounded(): notification was running")
-        val startIntent = Intent(this, ForegroundService::class.java)
-        startIntent.putExtra(COMMAND_ID, COMMAND_START)
-        startIntent.putExtra(STARTED_TIMER_TIME_MS, pomodoroViewModel.startTime)
-        startService(startIntent)
+        if(pomodoroViewModel.startedStopwatch != null) {
+            Log.d("TAG", "onAppBackgrounded(): notification was running")
+            val startIntent = Intent(this, ForegroundService::class.java)
+            startIntent.putExtra(COMMAND_ID, COMMAND_START)
+            startIntent.putExtra(STARTED_TIMER_TIME_MS, pomodoroViewModel.startTime)
+            startService(startIntent)
+        }
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)

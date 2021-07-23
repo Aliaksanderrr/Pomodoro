@@ -20,7 +20,7 @@ class ForegroundService : Service() {
 
     private val builder by lazy {
         NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Simple Timer")
+            .setContentTitle("Pomodoro")
             .setGroup("Timer")
             .setGroupSummary(false)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
@@ -46,12 +46,17 @@ class ForegroundService : Service() {
     }
 
     private fun processCommand(intent: Intent?) {
+        Log.d("TAG", "processCommand(intent: Intent?)")
         when (intent?.extras?.getString(COMMAND_ID) ?: INVALID) {
             COMMAND_START -> {
                 val startTime = intent?.extras?.getLong(STARTED_TIMER_TIME_MS) ?: return
+                Log.d("TAG", "processCommand: val startTime = $startTime")
                 commandStart(startTime)
             }
-            COMMAND_STOP -> commandStop()
+            COMMAND_STOP -> {
+                commandStop()
+                Log.d("TAG", "processCommand: COMMAND_STOP -> commandStop()")
+            }
             INVALID -> return
         }
     }
@@ -60,7 +65,7 @@ class ForegroundService : Service() {
         if (isServiceStarted) {
             return
         }
-        Log.i("TAG", "commandStart()")
+        Log.d("TAG", "commandStart()")
         try {
             moveToStartedState()
             startForegroundAndShowNotification()
@@ -76,7 +81,7 @@ class ForegroundService : Service() {
                 notificationManager?.notify(
                     NOTIFICATION_ID,
                     getNotification(
-                        (System.currentTimeMillis() - startTime).displayTime().dropLast(3)
+                        (System.currentTimeMillis() - startTime).displayTime()
                     )
                 )
                 delay(INTERVAL)
@@ -136,8 +141,8 @@ class ForegroundService : Service() {
 
     private companion object {
 
-        private const val CHANNEL_ID = "Channel_ID"
-        private const val NOTIFICATION_ID = 777
+        private const val CHANNEL_ID = "Channel_ID22"
+        private const val NOTIFICATION_ID = 8888
         private const val INTERVAL = 1000L
     }
 }

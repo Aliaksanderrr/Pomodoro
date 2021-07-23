@@ -29,31 +29,36 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
             android:text="00:00:00"
+            android:textColor="@color/primaryColor"
             android:textSize="24sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@id/blinking_indicator"
-            app:layout_constraintTop_toTopOf="parent"/>
+            app:layout_constraintTop_toTopOf="parent" />
 
         <com.minginovich.pomodoro.views.CustomView
             android:id="@+id/custom_view_progress"
             android:layout_width="32dp"
             android:layout_height="32dp"
-            app:custom_color="@color/purple_500"
-            app:custom_style="fill"
             android:layout_marginStart="16dp"
+            android:theme="@style/Theme.Pomodoro"
+            app:custom_color="@color/primaryColor"
+            app:custom_style="fill"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@id/stopwatch_timer"
-            app:layout_constraintTop_toTopOf="parent"/>
+            app:layout_constraintTop_toTopOf="parent" />
+
 
         <Button
             android:id="@+id/start_pause_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="10dp"
-            android:background="@color/cardview_light_background"
+            android:backgroundTint="@color/primaryColor"
             android:drawableLeft="@drawable/ic_baseline_play_arrow_24"
             android:padding="8dp"
             android:text="Start"
+            android:textColor="@color/secondaryTextColor"
+            app:iconTint="@color/primaryDarkColor"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/delete_button"
             app:layout_constraintTop_toTopOf="parent" />
@@ -68,7 +73,8 @@
             android:src="@drawable/ic_baseline_delete_24"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/primaryColor" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>
