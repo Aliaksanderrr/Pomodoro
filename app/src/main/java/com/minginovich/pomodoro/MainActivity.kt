@@ -54,7 +54,13 @@ class MainActivity : AppCompatActivity(), StopwatchListener, TimePickerFragment.
                 if (pomodoroViewModel.startedStopwatch != null && pomodoroViewModel.startedStopwatch!!.balanceMs > 1) {
                     pomodoroViewModel.startedStopwatch!!.balanceMs -= time - pomodoroViewModel.startTime
                         if (pomodoroViewModel.startedStopwatch!!.balanceMs < 1){
+                            Log.d(TAG, "balanceMs=${pomodoroViewModel.startedStopwatch!!.balanceMs}")
                             pomodoroViewModel.startedStopwatch!!.balanceMs = 1
+                            changeStopwatch(
+                                pomodoroViewModel.startedStopwatch!!.id,
+                                            pomodoroViewModel.startedStopwatch!!.startMs,
+                                            pomodoroViewModel.startedStopwatch!!.balanceMs,
+                                    false)
                         }
 //                        if (startedStopwatch!!.balanceMs <= 0 ) {startedStopwatch!!.isStarted = false}
 //                        if (startedStopwatch!!.balanceMs <= 0 ) {handler.postAtFrontOfQueue {
@@ -118,17 +124,20 @@ class MainActivity : AppCompatActivity(), StopwatchListener, TimePickerFragment.
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     fun onAppBackgrounded() {
         if(pomodoroViewModel.startedStopwatch != null) {
-            Log.d("TAG", "onAppBackgrounded(): notification was running")
+            Log.d(TAG, "onAppBackgrounded(): notification was running")
             val startIntent = Intent(this, ForegroundService::class.java)
             startIntent.putExtra(COMMAND_ID, COMMAND_START)
             startIntent.putExtra(STARTED_TIMER_TIME_MS, pomodoroViewModel.startTime)
+            startIntent.putExtra(STARTED_STOPWATCH_ID, pomodoroViewModel.startedStopwatch!!.id)
+            startIntent.putExtra(STARTED_STOPWATCH_BALANCE_MS, pomodoroViewModel.startedStopwatch!!.balanceMs)
+            startIntent.putExtra(STARTED_STOPWATCH_START_MS, pomodoroViewModel.startedStopwatch!!.startMs)
             startService(startIntent)
         }
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun onAppForegrounded() {
-        Log.d("TAG", "onAppForegrounded(): activity was running")
+        Log.d(TAG, "onAppForegrounded(): activity was running")
         val stopIntent = Intent(this, ForegroundService::class.java)
         stopIntent.putExtra(COMMAND_ID, COMMAND_STOP)
         startService(stopIntent)
@@ -137,9 +146,9 @@ class MainActivity : AppCompatActivity(), StopwatchListener, TimePickerFragment.
 
     /////TimePickerFragment.TimePickerCallback
     override fun userChoice(timeMs: Long) {
-        Log.d("classTimePickerFragment", "userChoice: time=$timeMs")
+        Log.d(TAG, "userChoice: time=$timeMs")
         if (timeMs > 0) {
-            Log.d("classTimePickerFragment", "user: time=$timeMs")
+            Log.d(TAG, "user: time=$timeMs")
             pomodoroViewModel.stopwatches.add(Stopwatch(pomodoroViewModel.nextId++, timeMs, timeMs, false))
             stopwatchAdapter.submitList(pomodoroViewModel.stopwatches.toList())
         }

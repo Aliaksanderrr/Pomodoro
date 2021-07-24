@@ -16,6 +16,11 @@ class ForegroundService : Service() {
 
     private var isServiceStarted = false
     private var notificationManager: NotificationManager? = null
+
+    private var startTime: Long? = null
+    private var stopwatchId: Int? = null
+    private var stopwatchStartMS: Long? = null
+    private var stopwatchBalanceMS: Long? = null
     private var job: Job? = null
 
     private val builder by lazy {
@@ -49,9 +54,12 @@ class ForegroundService : Service() {
         Log.d("TAG", "processCommand(intent: Intent?)")
         when (intent?.extras?.getString(COMMAND_ID) ?: INVALID) {
             COMMAND_START -> {
-                val startTime = intent?.extras?.getLong(STARTED_TIMER_TIME_MS) ?: return
+                startTime = intent?.extras?.getLong(STARTED_TIMER_TIME_MS) ?: return
+                stopwatchId = intent.extras?.getInt(STARTED_STOPWATCH_ID) ?: return
+                stopwatchStartMS = intent.extras?.getLong(STARTED_STOPWATCH_START_MS) ?: return
+                stopwatchBalanceMS = intent.extras?.getLong(STARTED_STOPWATCH_BALANCE_MS) ?: return
                 Log.d("TAG", "processCommand: val startTime = $startTime")
-                commandStart(startTime)
+                commandStart()
             }
             COMMAND_STOP -> {
                 commandStop()
@@ -61,7 +69,7 @@ class ForegroundService : Service() {
         }
     }
 
-    private fun commandStart(startTime: Long) {
+    private fun commandStart() {
         if (isServiceStarted) {
             return
         }
@@ -69,21 +77,38 @@ class ForegroundService : Service() {
         try {
             moveToStartedState()
             startForegroundAndShowNotification()
-            continueTimer(startTime)
+            continueTimer()
         } finally {
             isServiceStarted = true
         }
     }
 
-    private fun continueTimer(startTime: Long) {
+    private fun continueTimer() {
         job = GlobalScope.launch(Dispatchers.Main) {
             while (true) {
-                notificationManager?.notify(
-                    NOTIFICATION_ID,
-                    getNotification(
-                        (System.currentTimeMillis() - startTime).displayTime()
+
+                val time = System.currentTimeMillis()
+                    stopwatchBalanceMS = stopwatchBalanceMS?.minus(time - startTime!!)
+                    if (stopwatchBalanceMS!! < 1){
+                        stopwatchBalanceMS = 1
+                    }
+                startTime = time
+                if (stopwatchBalanceMS == 1L){
+                    notificationManager?.notify(
+                        NOTIFICATION_ID,
+                        getNotification(
+                            stopwatchBalanceMS!!.displayTime() + ": timer finished"
+                        )
                     )
-                )
+
+                } else {
+                    notificationManager?.notify(
+                        NOTIFICATION_ID,
+                        getNotification(
+                            stopwatchBalanceMS!!.displayTime()
+                        )
+                    )
+                }
                 delay(INTERVAL)
             }
         }

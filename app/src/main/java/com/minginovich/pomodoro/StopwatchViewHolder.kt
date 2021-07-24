@@ -1,9 +1,12 @@
 package com.minginovich.pomodoro
 
+import android.annotation.SuppressLint
 import com.minginovich.pomodoro.databinding.StopwatchItemBinding
 import android.content.res.Resources
+import android.graphics.Color
 import android.graphics.drawable.AnimationDrawable
 import android.os.CountDownTimer
+import android.util.Log
 import androidx.core.view.isInvisible
 import androidx.recyclerview.widget.RecyclerView
 import com.minginovich.pomodoro.views.FakeActivity
@@ -24,14 +27,24 @@ class StopwatchViewHolder(
         binding.customViewProgress.setCurrent(stopwatch.startMs - stopwatch.balanceMs)
 
         if (listener.getStartedStopwatch() == stopwatch.id){
-            if (stopwatch.balanceMs > 1) {
-                startTimer(stopwatch)
+            if (stopwatch.balanceMs == 1L) {
+                Log.d("stopwatch", "finishTimer(${stopwatch.id}, ${stopwatch.balanceMs.displayTime()})")
+//                listener.setStartedStopwatch(-1)
+                finishTimer(stopwatch)
             } else{
-                stopTimer(stopwatch)
-                listener.setStartedStopwatch(-1)
+                Log.d("stopwatch", "startTimer(${stopwatch.id}, ${stopwatch.balanceMs.displayTime()})")
+                startTimer(stopwatch)
+//                stopTimer(stopwatch)
             }
         } else {
-            stopTimer(stopwatch)
+            if (stopwatch.balanceMs == 1L) {
+                Log.d("stopwatch", "finishTimer(${stopwatch.id}, ${stopwatch.balanceMs.displayTime()})")
+//                listener.setStartedStopwatch(-1)
+                finishTimer(stopwatch)
+            } else{
+                Log.d("stopwatch", "stopTimer(${stopwatch.id}, ${stopwatch.balanceMs.displayTime()})")
+                stopTimer(stopwatch)
+            }
         }
 
         initButtonsListeners(stopwatch)
@@ -56,11 +69,15 @@ class StopwatchViewHolder(
         }
     }
 
+    @SuppressLint("ResourceAsColor")
     private fun startTimer(stopwatch: Stopwatch) {
         val drawable = resources.getDrawable(R.drawable.ic_baseline_pause_24)
         binding.startPauseButton.text = "Pause"
         binding.startPauseButton.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
-
+        binding.constraintLayout.setBackgroundColor(Color.WHITE)
+        binding.startPauseButton.isActivated = true
+        binding.startPauseButton.isClickable = true
+        binding.startPauseButton.isEnabled = true
         timer?.cancel()
         timer = getCountDownTimer(stopwatch)
         timer?.start()
@@ -72,10 +89,26 @@ class StopwatchViewHolder(
     private fun stopTimer(stopwatch: Stopwatch) {
         val drawable = resources.getDrawable(R.drawable.ic_baseline_play_arrow_24)
         binding.startPauseButton.text = "Start"
+        binding.startPauseButton.isActivated = true
+        binding.startPauseButton.isClickable = true
+        binding.startPauseButton.isEnabled = true
         binding.startPauseButton.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
-
+        binding.constraintLayout.setBackgroundColor(Color.WHITE)
         timer?.cancel()
 
+        binding.blinkingIndicator.isInvisible = true
+        (binding.blinkingIndicator.background as? AnimationDrawable)?.stop()
+    }
+
+    @SuppressLint("ResourceAsColor")
+    private fun finishTimer(stopwatch: Stopwatch){
+        binding.startPauseButton.text = "Finish"
+        binding.startPauseButton.isActivated = false
+        binding.startPauseButton.isClickable = false
+        binding.startPauseButton.isEnabled = false
+        binding.constraintLayout.setBackgroundColor(Color.RED)
+        binding.startPauseButton.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null)
+        timer?.cancel()
         binding.blinkingIndicator.isInvisible = true
         (binding.blinkingIndicator.background as? AnimationDrawable)?.stop()
     }

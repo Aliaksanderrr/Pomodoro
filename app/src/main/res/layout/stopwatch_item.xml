@@ -11,7 +11,8 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:id="@+id/constraint_layout">
 
         <ImageView
             android:id="@+id/blinking_indicator"
@@ -65,16 +66,16 @@
 
         <ImageButton
             android:id="@+id/delete_button"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_width="48sp"
+            android:layout_height="48sp"
             android:layout_marginEnd="10dp"
-            android:background="@color/cardview_light_background"
+            android:backgroundTint="@color/primaryColor"
             android:padding="8dp"
             android:src="@drawable/ic_baseline_delete_24"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/primaryColor" />
+            app:tint="@color/white" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>
